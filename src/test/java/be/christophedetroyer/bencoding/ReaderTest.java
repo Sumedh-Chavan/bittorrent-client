@@ -5,6 +5,8 @@ import be.christophedetroyer.torrent.Torrent;
 import be.christophedetroyer.torrent.TorrentParser;
 import org.junit.Test;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Random;
 
@@ -86,6 +88,18 @@ public class ReaderTest
             System.out.println(torrent);
         }
         catch (Exception e) {}
+    }
+
+    @Test
+    public void random()
+    {
+        try{
+            String content = Files.readString(Paths.get("/home/ritesh/Downloads/2001259.torrent"));
+            System.out.println("Content: " + content);
+        }
+        catch (Exception e){
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
     /**

@@ -44,6 +44,12 @@ public class Tracker {
         return urlEncodeBytes(infoHashBytes);
     }
 
+    /**
+     * the function sends the traker get requests to the tracker
+     * and gets the tracker response from the tracker in the bencoded
+     * format.
+     * @return
+     */
     public String sendTrackerRequest()
     {
         try {
@@ -67,13 +73,16 @@ public class Tracker {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String responseLine;
+            StringBuilder requestResponse = new StringBuilder();
             while ((responseLine = in.readLine()) != null) {
-                System.out.println(responseLine);
+                requestResponse.append(responseLine);
             }
+
+            System.out.println(requestResponse.toString());
 
             in.close();
             connection.disconnect();
-            return responseLine;
+            return requestResponse.toString();
         } catch (IOException e) {
             e.printStackTrace();
         }

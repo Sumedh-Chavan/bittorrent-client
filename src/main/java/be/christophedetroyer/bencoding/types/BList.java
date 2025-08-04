@@ -2,9 +2,6 @@ package be.christophedetroyer.bencoding.types;
 
 import java.util.*;
 
-/**
- * Created by christophe on 15.01.15.
- */
 public class BList implements IBencodable
 {
     public byte[] blob;

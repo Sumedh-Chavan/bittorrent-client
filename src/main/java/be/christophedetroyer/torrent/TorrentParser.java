@@ -19,9 +19,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * Created by christophe on 17.01.15.
- */
 public class TorrentParser
 {
     public static Torrent parseTorrent(InputStream input) throws IOException

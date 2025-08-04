@@ -4,9 +4,6 @@ import java.util.*;
 
 //TODO we don't need this..?
 
-/**
- * Created by christophe on 15.01.15.
- */
 public class BDictionary implements IBencodable
 {
     private final Map<BByteString, IBencodable> dictionary;

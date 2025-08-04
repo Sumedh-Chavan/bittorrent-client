@@ -8,9 +8,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
 
-/**
- * Created by christophe on 15.01.15.
- */
 public class Utils
 {
 

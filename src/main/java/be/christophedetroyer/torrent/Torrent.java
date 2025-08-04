@@ -2,9 +2,6 @@ package be.christophedetroyer.torrent;
 
 import java.util.*;
 
-/**
- * Created by christophe on 16.01.15.
- */
 public class Torrent
 {
     private String announce;
