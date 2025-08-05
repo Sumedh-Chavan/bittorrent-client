@@ -1,5 +1,6 @@
-package be.christophedetroyer.tracker;
+package bittorrentClient.tracker;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TrackerResponse {
@@ -15,6 +16,10 @@ public class TrackerResponse {
         private List<PeerInfo> peers;      // For dictionary model
         private byte[] binaryPeers;        // For compact/binary model
 
+        public TrackerResponse()
+        {
+            peers = new ArrayList<PeerInfo>();
+        }
         // Getters and setters
 
         public String getFailureReason() {

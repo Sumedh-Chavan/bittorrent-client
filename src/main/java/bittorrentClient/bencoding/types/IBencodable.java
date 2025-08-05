@@ -1,4 +1,4 @@
-package be.christophedetroyer.bencoding.types;
+package bittorrentClient.bencoding.types;
 
 public interface IBencodable
 {

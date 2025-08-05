@@ -1,8 +1,7 @@
-package be.christophedetroyer.tracker;
+package bittorrentClient.tracker;
 
-import be.christophedetroyer.torrent.Torrent;
-import be.christophedetroyer.torrent.TorrentParser;
-import junit.framework.TestCase;
+import bittorrentClient.torrent.Torrent;
+import bittorrentClient.torrent.TorrentParser;
 import org.junit.Test;
 
 public class TrackerResponseParserTest {
@@ -13,6 +12,7 @@ public class TrackerResponseParserTest {
         Tracker tracker = new Tracker(torrent);
         TrackerResponseParser trackerResponseParser = new TrackerResponseParser();
         TrackerResponse trackerResponse = trackerResponseParser.parseTrackerResponse(tracker.sendTrackerRequest());
+        System.out.println("tracker response is ");
         System.out.println(trackerResponse);
     }
 }

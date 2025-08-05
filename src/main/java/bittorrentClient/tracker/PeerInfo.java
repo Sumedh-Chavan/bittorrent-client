@@ -1,13 +1,13 @@
-package be.christophedetroyer.tracker;
+package bittorrentClient.tracker;
 
 public class PeerInfo {
     private String peerId;
     private String ip;
-    private int port;
+    private long port;
 
     public PeerInfo() {}
 
-    public PeerInfo(String peerId, String ip, int port) {
+    public PeerInfo(String peerId, String ip, long port) {
         this.peerId = peerId;
         this.ip = ip;
         this.port = port;
@@ -29,11 +29,11 @@ public class PeerInfo {
         this.ip = ip;
     }
 
-    public int getPort() {
+    public long getPort() {
         return port;
     }
 
-    public void setPort(int port) {
+    public void setPort(long port) {
         this.port = port;
     }
 

@@ -1,6 +1,6 @@
-package be.christophedetroyer.bencoding;
+package bittorrentClient.bencoding;
 
-import be.christophedetroyer.bencoding.types.*;
+import bittorrentClient.bencoding.types.*;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;

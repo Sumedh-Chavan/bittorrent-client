@@ -1,6 +1,6 @@
-package be.christophedetroyer.bencoding.types;
+package bittorrentClient.bencoding.types;
 
-import be.christophedetroyer.bencoding.Utils;
+import bittorrentClient.bencoding.Utils;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;

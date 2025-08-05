@@ -1,19 +1,16 @@
-package be.christophedetroyer.tracker;
+package bittorrentClient.tracker;
 
-import be.christophedetroyer.torrent.Torrent;
+import bittorrentClient.torrent.Torrent;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.Random;
 
 public class Tracker {
 
-    private Torrent torrent;
+    private final Torrent torrent;
 
     public Tracker(Torrent torrent) {
         this.torrent = torrent;
@@ -50,14 +47,15 @@ public class Tracker {
      * format.
      * @return
      */
-    public String sendTrackerRequest()
+    public byte[] sendTrackerRequest()
     {
         try {
         String urlWithParams = torrent.getAnnounce() +
                 "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
                 "&peer_id=" + generatePeerId() +
                 "&port=" + 6010 +
-                "&uploaded=0&downloaded=0&left="+ torrent.getTotalSize() +"&event=started";
+                "&uploaded=0&downloaded=0&left="+ torrent.getTotalSize() +"&event=started" +
+                "&compact=0";
 
             // Example: Append basic tracker parameters
 
@@ -71,18 +69,15 @@ public class Tracker {
             int responseCode = connection.getResponseCode();
             System.out.println("Tracker responded with HTTP " + responseCode);
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String responseLine;
-            StringBuilder requestResponse = new StringBuilder();
-            while ((responseLine = in.readLine()) != null) {
-                requestResponse.append(responseLine);
-            }
+            InputStream in = connection.getInputStream();
+            byte[] responseBytes = in.readAllBytes();
+            in.close();
 
-            System.out.println(requestResponse.toString());
+            System.out.println(new String(responseBytes));
 
             in.close();
             connection.disconnect();
-            return requestResponse.toString();
+            return responseBytes;
         } catch (IOException e) {
             e.printStackTrace();
         }

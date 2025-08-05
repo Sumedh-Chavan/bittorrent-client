@@ -1,4 +1,4 @@
-package be.christophedetroyer.bencoding;
+package bittorrentClient.bencoding;
 
 import java.io.EOFException;
 import java.io.FileNotFoundException;

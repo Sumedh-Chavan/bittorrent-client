@@ -1,4 +1,4 @@
-package be.christophedetroyer.torrent;
+package bittorrentClient.torrent;
 
 import java.util.List;
 

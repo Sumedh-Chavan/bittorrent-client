@@ -1,12 +1,9 @@
-package be.christophedetroyer.bencoding.types;
+package bittorrentClient.bencoding.types;
 
-import be.christophedetroyer.bencoding.Utils;
+import bittorrentClient.bencoding.Utils;
 
 import java.util.ArrayList;
 
-/**
- * Created by christophe on 15.01.15.
- */
 public class BInt implements IBencodable
 {
     public byte[] blob;

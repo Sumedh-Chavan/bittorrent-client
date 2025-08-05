@@ -1,12 +1,12 @@
-package be.christophedetroyer.torrent;
+package bittorrentClient.torrent;
 
-import be.christophedetroyer.bencoding.Reader;
-import be.christophedetroyer.bencoding.Utils;
-import be.christophedetroyer.bencoding.types.BByteString;
-import be.christophedetroyer.bencoding.types.BDictionary;
-import be.christophedetroyer.bencoding.types.BInt;
-import be.christophedetroyer.bencoding.types.BList;
-import be.christophedetroyer.bencoding.types.IBencodable;
+import bittorrentClient.bencoding.Reader;
+import bittorrentClient.bencoding.Utils;
+import bittorrentClient.bencoding.types.BByteString;
+import bittorrentClient.bencoding.types.BDictionary;
+import bittorrentClient.bencoding.types.BInt;
+import bittorrentClient.bencoding.types.BList;
+import bittorrentClient.bencoding.types.IBencodable;
 
 import java.io.File;
 import java.io.IOException;

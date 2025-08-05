@@ -1,8 +1,8 @@
-package be.christophedetroyer.bencoding;
+package bittorrentClient.bencoding;
 
-import be.christophedetroyer.bencoding.types.*;
-import be.christophedetroyer.torrent.Torrent;
-import be.christophedetroyer.torrent.TorrentParser;
+import bittorrentClient.bencoding.types.IBencodable;
+import bittorrentClient.torrent.Torrent;
+import bittorrentClient.torrent.TorrentParser;
 import org.junit.Test;
 
 import java.nio.file.Files;
@@ -93,11 +93,16 @@ public class ReaderTest
     @Test
     public void random()
     {
-        try{
-            String content = Files.readString(Paths.get("/home/ritesh/Downloads/2001259.torrent"));
-            System.out.println("Content: " + content);
-        }
-        catch (Exception e){
+        try {
+            byte[] content = Files.readAllBytes(Paths.get("/home/ritesh/Downloads/2001259.torrent"));
+            System.out.println("File size (bytes): " + content.length);
+
+            // Optional: Print a hex dump (for debugging)
+            for (int i = 0; i < Math.min(100, content.length); i++) {
+                System.out.printf("%c ", content[i]);
+            }
+
+        } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
     }

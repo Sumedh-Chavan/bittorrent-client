@@ -1,8 +1,7 @@
-package be.christophedetroyer.tracker;
+package bittorrentClient.tracker;
 
-import be.christophedetroyer.torrent.Torrent;
-import be.christophedetroyer.torrent.TorrentParser;
-import junit.framework.TestCase;
+import bittorrentClient.torrent.Torrent;
+import bittorrentClient.torrent.TorrentParser;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -14,8 +13,7 @@ public class TrackerTest {
         try {
             Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/2001259.torrent");
             Tracker tracker = new Tracker(torrent);
-            String response = tracker.sendTrackerRequest();
-
+            byte[] bytes = tracker.sendTrackerRequest();
         }
         catch (Exception e) {}
     }
