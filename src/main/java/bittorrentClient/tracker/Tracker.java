@@ -48,19 +48,18 @@ public class Tracker {
      * the function sends the traker get requests to the tracker
      * and gets the tracker response from the tracker in the bencoded
      * format.
+     *
      * @return
      */
-    public byte[] sendTrackerRequest()
-    {
+    public byte[] sendTrackerRequest() {
         try {
-        String urlWithParams = getActiveAnnounce() +
-                "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
-                "&peer_id=" + generatePeerId() +
-                "&port=" + 6010 +
-                "&uploaded=0&downloaded=0&left="+ torrent.getTotalSize() +"&event=started" +
-                "&compact=0";
+            String urlWithParams = getActiveAnnounce() +
+                    "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
+                    "&peer_id=" + generatePeerId() +
+                    "&port=" + 6010 +
+                    "&uploaded=0&downloaded=0&left=" + torrent.getTotalSize() + "&event=started" +
+                    "&compact=0";
 
-            // Example: Append basic tracker parameters
 
             System.out.println("url with Params is " + urlWithParams);
 
@@ -88,13 +87,11 @@ public class Tracker {
         return null;
     }
 
-    private String getActiveAnnounce()
-    {
+    private String getActiveAnnounce() {
         List<String> announceList = torrent.getAnnounceList();
 
-        for(String announce: announceList) {
-            if (announce.startsWith("http") && isTrackerReachable(announce))
-            {
+        for (String announce : announceList) {
+            if (announce.startsWith("http") && isTrackerReachable(announce)) {
                 System.out.println("active announce: " + announce);
                 return announce;
             }
@@ -123,13 +120,30 @@ public class Tracker {
             String host = url.getHost();
             int port = (url.getPort() != -1) ? url.getPort() : url.getDefaultPort();
 
-            // Try connecting via TCP
+            // If HTTP(S), try to get the response code
+            if (url.getProtocol().startsWith("http")) {
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(3000);
+                conn.setReadTimeout(3000);
+                conn.setRequestMethod("GET");
+
+                int code = conn.getResponseCode(); // triggers actual connection
+                conn.disconnect();
+
+                // If we get any valid HTTP code, tracker is reachable
+                return (code >= 100 && code < 600);
+            }
+
+            // Otherwise, fall back to simple TCP socket check
             try (Socket socket = new Socket()) {
-                socket.connect(new InetSocketAddress(host, port), 3000); // 3 sec timeout
+                socket.connect(new InetSocketAddress(host, port), 3000);
                 return true;
             }
-        } catch (Exception e) {
+
+        } catch (IOException e) {
             return false;
         }
     }
+
+    // Example usage
 }
