@@ -1,15 +1,10 @@
 package bittorrentClient.tracker;
 
-import bittorrentClient.bencoding.Reader;
-import bittorrentClient.bencoding.types.BByteString;
-import bittorrentClient.bencoding.types.BDictionary;
-import bittorrentClient.bencoding.types.BInt;
-import bittorrentClient.bencoding.types.IBencodable;
+import bittorrentClient.peer.PeerInfo;
 import com.dampcake.bencode.Bencode;
 import com.dampcake.bencode.Type;
 
 import java.net.InetAddress;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +40,7 @@ public class TrackerResponseParser {
             for (Map<String, Object> peerDict : peerDictList) {
                 String peerId = (String) peerDict.get("peer id");
                 String ip = (String) peerDict.get("ip");
-                Long port = toLong(peerDict.get("port"));
+                int port = (int)((long)peerDict.get("port"));
                 peers.add(new PeerInfo(peerId, ip, port));
             }
             response.setPeers(peers);
@@ -83,7 +78,7 @@ public class TrackerResponseParser {
             for (int i = 0; i + 6 < peersCompact.length; i += 6) {
                 byte[] ipBytes = new byte[4];
                 System.arraycopy(peersCompact, i, ipBytes, 0, 4);
-                long port = ((peersCompact[i + 4] & 0xFF) << 8) | (peersCompact[i + 5] & 0xFF);
+                int port = ((peersCompact[i + 4] & 0xFF) << 8) | (peersCompact[i + 5] & 0xFF);
                 String ip = InetAddress.getByAddress(ipBytes).getHostAddress();
                 String peerId = null;
                 PeerInfo peerInfo = new PeerInfo(peerId, ip, port);

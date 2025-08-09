@@ -1,6 +1,7 @@
 package bittorrentClient.tracker;
 
 import bittorrentClient.torrent.Torrent;
+import bittorrentClient.utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,20 +15,14 @@ import java.util.Random;
 public class Tracker {
 
     private final Torrent torrent;
+    private final String peerId;
 
     public Tracker(Torrent torrent) {
         this.torrent = torrent;
+        peerId = generatePeerId();
     }
 
     // Convert hex string to byte[]
-    public static byte[] hexToBytes(String hex) {
-        int len = hex.length();
-        byte[] result = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            result[i / 2] = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
-        }
-        return result;
-    }
 
     // Byte-by-byte percent encoding
     public static String urlEncodeBytes(byte[] bytes) {
@@ -40,7 +35,7 @@ public class Tracker {
 
     // Given hex info_hash string, return correctly URL-encoded value
     public static String encodeInfoHash(String hexInfoHash) {
-        byte[] infoHashBytes = hexToBytes(hexInfoHash);
+        byte[] infoHashBytes = Utils.hexStringToBytes(hexInfoHash);
         return urlEncodeBytes(infoHashBytes);
     }
 
@@ -55,7 +50,7 @@ public class Tracker {
         try {
             String urlWithParams = getActiveAnnounce() +
                     "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
-                    "&peer_id=" + generatePeerId() +
+                    "&peer_id=" + peerId +
                     "&port=" + 6010 +
                     "&uploaded=0&downloaded=0&left=" + torrent.getTotalSize() + "&event=started" +
                     "&compact=0";
@@ -145,5 +140,8 @@ public class Tracker {
         }
     }
 
+    public String getPeerId() {
+        return peerId;
+    }
     // Example usage
 }

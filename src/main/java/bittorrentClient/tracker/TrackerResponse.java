@@ -1,5 +1,7 @@
 package bittorrentClient.tracker;
 
+import bittorrentClient.peer.PeerInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 
