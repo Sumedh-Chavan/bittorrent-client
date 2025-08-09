@@ -5,7 +5,10 @@ import bittorrentClient.torrent.Torrent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URL;
+import java.util.List;
 import java.util.Random;
 
 public class Tracker {
@@ -50,7 +53,7 @@ public class Tracker {
     public byte[] sendTrackerRequest()
     {
         try {
-        String urlWithParams = torrent.getAnnounce() +
+        String urlWithParams = getActiveAnnounce() +
                 "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
                 "&peer_id=" + generatePeerId() +
                 "&port=" + 6010 +
@@ -85,6 +88,21 @@ public class Tracker {
         return null;
     }
 
+    private String getActiveAnnounce()
+    {
+        List<String> announceList = torrent.getAnnounceList();
+
+        for(String announce: announceList) {
+            if (announce.startsWith("http") && isTrackerReachable(announce))
+            {
+                System.out.println("active announce: " + announce);
+                return announce;
+            }
+        }
+
+        return null;
+    }
+
     public static String generatePeerId() {
         String prefix = "-SIM1000-"; // "SIM" is your client ID; "1000" is version 1.0.0
         StringBuilder sb = new StringBuilder(prefix);
@@ -97,5 +115,21 @@ public class Tracker {
         }
 
         return sb.toString(); // 20 bytes total
+    }
+
+    public static boolean isTrackerReachable(String trackerUrl) {
+        try {
+            URL url = new URL(trackerUrl);
+            String host = url.getHost();
+            int port = (url.getPort() != -1) ? url.getPort() : url.getDefaultPort();
+
+            // Try connecting via TCP
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(host, port), 3000); // 3 sec timeout
+                return true;
+            }
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
