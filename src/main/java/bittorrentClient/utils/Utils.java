@@ -2,6 +2,8 @@ package bittorrentClient.utils;
 
 public class Utils {
 
+    public static String CLIENT_ID = "-JV0001-7H9K3X2B4L5M";
+
     public static byte[] hexStringToBytes(String hex) {
         int len = hex.length();
         byte[] result = new byte[len / 2];
