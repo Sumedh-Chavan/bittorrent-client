@@ -1,6 +1,7 @@
 package bittorrentClient.tracker;
 
-import bittorrentClient.torrent.Torrent;
+import bittorrentClient.pojo.Torrent;
+import bittorrentClient.pojo.TrackerResponse;
 import bittorrentClient.torrent.TorrentParser;
 import org.junit.Test;
 

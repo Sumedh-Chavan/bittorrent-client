@@ -1,6 +1,6 @@
 package bittorrentClient;
 
-import bittorrentClient.torrent.Torrent;
+import bittorrentClient.pojo.Torrent;
 import bittorrentClient.torrent.TorrentParser;
 import bittorrentClient.tracker.Tracker;
 

@@ -1,6 +1,6 @@
-package bittorrentClient.tracker;
+package bittorrentClient.pojo;
 
-import bittorrentClient.peer.PeerInfo;
+import bittorrentClient.peer.Peer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,12 +15,12 @@ public class TrackerResponse {
         private Long incomplete;
 
         // Optional: only one of these is expected
-        private List<PeerInfo> peers;      // For dictionary model
+        private List<Peer> peers;      // For dictionary model
         private byte[] binaryPeers;        // For compact/binary model
 
         public TrackerResponse()
         {
-            peers = new ArrayList<PeerInfo>();
+            peers = new ArrayList<Peer>();
         }
         // Getters and setters
 
@@ -80,11 +80,11 @@ public class TrackerResponse {
             this.incomplete = incomplete;
         }
 
-        public List<PeerInfo> getPeers() {
+        public List<Peer> getPeers() {
             return peers;
         }
 
-        public void setPeers(List<PeerInfo> peers) {
+        public void setPeers(List<Peer> peers) {
             this.peers = peers;
         }
 

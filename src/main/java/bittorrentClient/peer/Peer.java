@@ -1,29 +1,219 @@
 package bittorrentClient.peer;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class Peer {
+    private String peerId;
+    private String ip;
+    private int port;
+//
+//    public boolean sendPeerHandshake(String info_hash, String clientPeerId) throws Exception
+//    {
+//        try {
+//            Socket socket = new Socket();
+//            socket.connect(new InetSocketAddress(ip, port), 5000);
+//            OutputStream out = socket.getOutputStream();
+//            InputStream in = socket.getInputStream();
+//
+//            ByteArrayOutputStream handshake = new ByteArrayOutputStream();
+//            handshake.write(19);
+//            handshake.write("BitTorrent protocol".getBytes());
+//
+//            handshake.write(new byte[8]);
+//
+//            handshake.write(info_hash.getBytes()); // 20 bytes SHA1 of info dict
+//            handshake.write(clientPeerId.getBytes());   // 20 bytes unique client ID
+//
+//            out.write(handshake.toByteArray());
+//            out.flush();
+//
+//            byte[] responseBytes = in.readAllBytes();
+//
+//            int pstrlen = responseBytes[0] & 0xFF; // convert unsigned byte
+//            String pstr = new String(responseBytes, 1, pstrlen);
+//            byte[] reserved = Arrays.copyOfRange(responseBytes, 1 + pstrlen, 1 + pstrlen + 8);
+//            byte[] infoHash = Arrays.copyOfRange(responseBytes, 1 + pstrlen + 8, 1 + pstrlen + 8 + 20);
+//            byte[] peerId = Arrays.copyOfRange(responseBytes, 1 + pstrlen + 8 + 20, 68);
+//
+//            System.out.println("pstrlen   = " + pstrlen);
+//            System.out.println("pstr      = " + pstr);
+//            System.out.println("reserved  = " + bytesToHex(reserved));
+//            System.out.println("info_hash = " + bytesToHex(infoHash));
+//            System.out.println("peer_id   = " + new String(peerId, "ISO-8859-1")); // use ISO-8859-1 for raw byte mapping
+//        }
+//        catch (Exception e) {
+//            return false;
+//        }
+//        return true;
+//    }
 
-    private PeerInfo peerInfo;
+        //the below code for peer handshake also works but chatgpt gave a more polished version so maybe work with that for now
+//    public boolean sendPeerHandshake(byte[] infoHashBytes, byte[] clientPeerIdBytes) {
+//        try {
+//            Socket socket = new Socket();
+//            socket.connect(new InetSocketAddress(ip, port), 3000); // 3s connect timeout
+//            socket.setSoTimeout(10000); // 3s read timeout
+//
+//            OutputStream out = socket.getOutputStream();
+//            InputStream in = socket.getInputStream();
+//
+//            ByteArrayOutputStream handshake = new ByteArrayOutputStream();
+//            handshake.write(19);
+//            handshake.write("BitTorrent protocol".getBytes("ISO-8859-1"));
+//            handshake.write(new byte[8]); // reserved
+//            handshake.write(infoHashBytes); // 20 raw bytes
+//            handshake.write(clientPeerIdBytes); // 20 raw bytes
+//
+//            out.write(handshake.toByteArray());
+//            out.flush();
+//
+//            // Read exactly 68 bytes of handshake
+//            byte[] responseBytes = in.readNBytes(68);
+//
+//            int pstrlen = responseBytes[0] & 0xFF;
+//            String pstr = new String(responseBytes, 1, pstrlen, "ISO-8859-1");
+//            byte[] reserved = Arrays.copyOfRange(responseBytes, 1 + pstrlen, 1 + pstrlen + 8);
+//            byte[] infoHash = Arrays.copyOfRange(responseBytes, 1 + pstrlen + 8, 1 + pstrlen + 8 + 20);
+//            byte[] peerId = Arrays.copyOfRange(responseBytes, 1 + pstrlen + 8 + 20, 68);
+//
+//            System.out.println("pstrlen   = " + pstrlen);
+//            System.out.println("pstr      = " + pstr);
+//            System.out.println("reserved  = " + bytesToHex(reserved));
+//            System.out.println("info_hash = " + bytesToHex(infoHash));
+//            System.out.println("peer_id   = " + new String(peerId, "ISO-8859-1"));
+//
+//            socket.close();
+//        } catch (Exception e) {
+//            System.err.println(e.getMessage());
+//            return false;
+//        }
+//        return true;
+//    }
 
-    public void sendPeerHandshake(PeerInfo peerInfo, String info_hash, String peerId) throws Exception
-    {
-        Socket socket = new Socket(peerInfo.getIp(), Integer.parseInt(Long.toString(peerInfo.getPort())));
-        OutputStream out = socket.getOutputStream();
 
-        ByteArrayOutputStream handshake = new ByteArrayOutputStream();
-        handshake.write(19);  // pstrlen
-        handshake.write("BitTorrent protocol".getBytes()); // pstr
+        public boolean sendPeerHandshake(byte[] infoHashBytes, byte[] peerIdBytes) {
+        try (Socket socket = new Socket()) {
+            // 1. Connect
+            socket.connect(new InetSocketAddress(ip, port), 3000); // 3s connect timeout
+            socket.setSoTimeout(10000); // 10s read timeout for handshake
 
-        handshake.write(new byte[8]); // reserved bytes
+            OutputStream out = socket.getOutputStream();
+            InputStream in = socket.getInputStream();
 
-        handshake.write(info_hash.getBytes()); // 20 bytes SHA1 of info dict
-        handshake.write(peerId.getBytes());   // 20 bytes unique client ID
+            // 2. Build handshake
+            ByteArrayOutputStream handshake = new ByteArrayOutputStream();
 
-        out.write(handshake.toByteArray());
-        out.flush();
+            // pstrlen
+            handshake.write(19);
 
+            // pstr
+            handshake.write("BitTorrent protocol".getBytes(StandardCharsets.ISO_8859_1));
+
+            // reserved bytes (DHT + Fast extension bits set)
+            byte[] reserved = {0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x05};
+            handshake.write(reserved);
+
+            // info_hash (20 raw bytes)
+            handshake.write(infoHashBytes);
+
+            // peer_id (20 raw bytes)
+            handshake.write(peerIdBytes);
+
+            // 3. Send handshake
+            out.write(handshake.toByteArray());
+            out.flush();
+
+            // 4. Read handshake response (exactly 68 bytes)
+            byte[] responseBytes = new byte[68];
+            int totalRead = 0;
+            while (totalRead < 68) {
+                int bytesRead = in.read(responseBytes, totalRead, 68 - totalRead);
+                if (bytesRead == -1) {
+                    throw new IOException("Peer closed connection before handshake completed");
+                }
+                totalRead += bytesRead;
+            }
+
+            // 5. Parse handshake response
+            int pstrlen = responseBytes[0] & 0xFF;
+            String pstr = new String(responseBytes, 1, pstrlen, StandardCharsets.ISO_8859_1);
+            byte[] reservedResp = Arrays.copyOfRange(responseBytes, 1 + pstrlen, 1 + pstrlen + 8);
+            byte[] infoHashResp = Arrays.copyOfRange(responseBytes, 1 + pstrlen + 8, 1 + pstrlen + 8 + 20);
+            byte[] peerIdResp = Arrays.copyOfRange(responseBytes, 1 + pstrlen + 8 + 20, 68);
+
+            // 6. Debug prints
+            System.out.println("pstrlen   = " + pstrlen);
+            System.out.println("pstr      = " + pstr);
+            System.out.println("reserved  = " + bytesToHex(reservedResp));
+            System.out.println("info_hash = " + bytesToHex(infoHashResp));
+            System.out.println("peer_id   = " + new String(peerIdResp, StandardCharsets.ISO_8859_1));
+
+            // 7. Validate info_hash matches
+            if (!Arrays.equals(infoHashBytes, infoHashResp)) {
+                throw new IOException("Mismatched info_hash from peer");
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            System.err.println("Handshake failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
+    }
+
+    //////////////////BOILER PLATE CODE BELOW////////////
+
+    public Peer() {}
+
+    public Peer(String peerId, String ip, int port) {
+        this.peerId = peerId;
+        this.ip = ip;
+        this.port = port;
+    }
+
+    public String getPeerId() {
+        return peerId;
+    }
+
+    public void setPeerId(String peerId) {
+        this.peerId = peerId;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    @Override
+    public String toString() {
+        return "PeerInfo{" +
+                "peerId='" + peerId + '\'' +
+                ", ip='" + ip + '\'' +
+                ", port=" + port +
+                '}';
     }
 }

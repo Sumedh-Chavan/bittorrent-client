@@ -7,6 +7,7 @@ import bittorrentClient.bencoding.types.BDictionary;
 import bittorrentClient.bencoding.types.BInt;
 import bittorrentClient.bencoding.types.BList;
 import bittorrentClient.bencoding.types.IBencodable;
+import bittorrentClient.pojo.Torrent;
 
 import java.io.File;
 import java.io.IOException;

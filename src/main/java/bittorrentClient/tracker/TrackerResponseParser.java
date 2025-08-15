@@ -1,6 +1,7 @@
 package bittorrentClient.tracker;
 
-import bittorrentClient.peer.PeerInfo;
+import bittorrentClient.peer.Peer;
+import bittorrentClient.pojo.TrackerResponse;
 import com.dampcake.bencode.Bencode;
 import com.dampcake.bencode.Type;
 
@@ -36,12 +37,12 @@ public class TrackerResponseParser {
         if (peersObj instanceof List) {
             // Dictionary model
             List<Map<String, Object>> peerDictList = (List<Map<String, Object>>) peersObj;
-            List<PeerInfo> peers = new ArrayList<>();
+            List<Peer> peers = new ArrayList<>();
             for (Map<String, Object> peerDict : peerDictList) {
                 String peerId = (String) peerDict.get("peer id");
                 String ip = (String) peerDict.get("ip");
                 int port = (int)((long)peerDict.get("port"));
-                peers.add(new PeerInfo(peerId, ip, port));
+                peers.add(new Peer(peerId, ip, port));
             }
             response.setPeers(peers);
 
@@ -69,11 +70,11 @@ public class TrackerResponseParser {
 
     }
 
-    private List<PeerInfo> parsePeerListStringType(Map<String, Object> decoded) throws Exception {
+    private List<Peer> parsePeerListStringType(Map<String, Object> decoded) throws Exception {
         Object peersObj = decoded.get("peers");
         if (peersObj instanceof String) {
             byte[] peersCompact;
-            List<PeerInfo> peers = new ArrayList<>();
+            List<Peer> peers = new ArrayList<>();
             peersCompact = ((String) peersObj).getBytes("ISO-8859-1");
             for (int i = 0; i + 6 < peersCompact.length; i += 6) {
                 byte[] ipBytes = new byte[4];
@@ -81,8 +82,8 @@ public class TrackerResponseParser {
                 int port = ((peersCompact[i + 4] & 0xFF) << 8) | (peersCompact[i + 5] & 0xFF);
                 String ip = InetAddress.getByAddress(ipBytes).getHostAddress();
                 String peerId = null;
-                PeerInfo peerInfo = new PeerInfo(peerId, ip, port);
-                peers.add(peerInfo);
+                Peer peer = new Peer(peerId, ip, port);
+                peers.add(peer);
             }
             return peers;
         }

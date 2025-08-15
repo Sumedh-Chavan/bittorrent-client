@@ -1,6 +1,6 @@
 package bittorrentClient.tracker;
 
-import bittorrentClient.torrent.Torrent;
+import bittorrentClient.pojo.Torrent;
 import bittorrentClient.utils.Utils;
 
 import java.io.IOException;
