@@ -11,6 +11,78 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+class AnnounceTester {
+
+    ExecutorService executor = Executors.newFixedThreadPool(7);
+    String activeAnnounce;
+
+    public String getAnActiveAnnounce(List<String> announceList)
+    {
+        synchronized (this) {
+            for (String announce : announceList)
+                executor.execute(() -> testTrackerThreadFunc(announce));
+        }
+        try {
+            executor.shutdown();
+            if(executor.awaitTermination(10, TimeUnit.SECONDS))
+                return activeAnnounce;
+            return  null;
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void testTrackerThreadFunc(String tracker)
+    {
+        if(tracker.startsWith("http") && testTracker(tracker))
+        {
+            synchronized (this) {
+                activeAnnounce = tracker;
+                executor.shutdownNow();
+            }
+        }
+    }
+
+    public boolean testTracker(String tracker)
+    {
+        try {
+            URL url = new URL(tracker);
+            String host = url.getHost();
+            int port = (url.getPort() != -1) ? url.getPort() : url.getDefaultPort();
+
+            // If HTTP(S), try to get the response code
+            if (url.getProtocol().startsWith("http")) {
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                //try and increase the timeout if you have any error
+                conn.setConnectTimeout(1000);
+                conn.setReadTimeout(1000);
+                conn.setRequestMethod("GET");
+
+                int code = conn.getResponseCode(); // triggers actual connection
+                conn.disconnect();
+
+                // If we get any valid HTTP code, tracker is reachable
+                return (code >= 100 && code < 600);
+            }
+
+            // Otherwise, fall back to simple TCP socket check
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(host, port), 1000);
+                socket.close();
+                return true;
+            }
+
+        } catch (IOException e) {
+            return false;
+        }
+    }
+}
 
 public class Tracker {
 
@@ -48,7 +120,8 @@ public class Tracker {
      */
     public byte[] sendTrackerRequest() {
         try {
-            String urlWithParams = getActiveAnnounce() +
+            AnnounceTester announceTester = new AnnounceTester();
+            String urlWithParams = announceTester.getAnActiveAnnounce(torrent.getAnnounceList()) +
                     "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
                     "&peer_id=" + peerId +
                     "&port=" + 6010 +
@@ -58,12 +131,7 @@ public class Tracker {
             System.out.println("url with Params is " + urlWithParams);
 
             URL url = new URL(urlWithParams);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("User-Agent", "BitTorrentSimulator/1.0");
-            connection.setRequestProperty("Host", url.getHost()); // Ensure Host header is set
-            connection.setRequestProperty("Connection", "close"); // Optional: ensure no keep-alive
-            connection.setUseCaches(false);
+            HttpURLConnection connection = getConnection(url);
 
             int responseCode = connection.getResponseCode();
             System.out.println("Tracker responded with HTTP " + responseCode);
@@ -82,6 +150,17 @@ public class Tracker {
 
         return null;
     }
+
+    private HttpURLConnection getConnection(URL url) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("User-Agent", "BitTorrentSimulator/1.0");
+        connection.setRequestProperty("Host", url.getHost()); // Ensure Host header is set
+        connection.setRequestProperty("Connection", "close"); // Optional: ensure no keep-alive
+        connection.setUseCaches(false);
+        return connection;
+    }
+
 
 //    public byte[] sendTrackerRequest() {
 //        try {
@@ -202,18 +281,18 @@ public class Tracker {
 //    }
 
 
-    private String getActiveAnnounce() {
-        List<String> announceList = torrent.getAnnounceList();
-
-        for (String announce : announceList) {
-            if (announce.startsWith("http") && isTrackerReachable(announce)) {
-                System.out.println("active announce: " + announce);
-                return announce;
-            }
-        }
-
-        return null;
-    }
+//    private String getActiveAnnounce() {
+//        List<String> announceList = torrent.getAnnounceList();
+//
+//        for (String announce : announceList) {
+//            if (announce.startsWith("http") && isTrackerReachable(announce)) {
+//                System.out.println("active announce: " + announce);
+//                return announce;
+//            }
+//        }
+//
+//        return null;
+//    }
 
     public static String generatePeerId() {
         String prefix = "-SIM1000-"; // "SIM" is your client ID; "1000" is version 1.0.0
@@ -229,37 +308,37 @@ public class Tracker {
         return sb.toString(); // 20 bytes total
     }
 
-    public static boolean isTrackerReachable(String trackerUrl) {
-        try {
-            URL url = new URL(trackerUrl);
-            String host = url.getHost();
-            int port = (url.getPort() != -1) ? url.getPort() : url.getDefaultPort();
-
-            // If HTTP(S), try to get the response code
-            if (url.getProtocol().startsWith("http")) {
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(3000);
-                conn.setReadTimeout(3000);
-                conn.setRequestMethod("GET");
-
-                int code = conn.getResponseCode(); // triggers actual connection
-                conn.disconnect();
-
-                // If we get any valid HTTP code, tracker is reachable
-                return (code >= 100 && code < 600);
-            }
-
-            // Otherwise, fall back to simple TCP socket check
-            try (Socket socket = new Socket()) {
-                socket.connect(new InetSocketAddress(host, port), 3000);
-                socket.close();
-                return true;
-            }
-
-        } catch (IOException e) {
-            return false;
-        }
-    }
+//    public static boolean isTrackerReachable(String trackerUrl) {
+//        try {
+//            URL url = new URL(trackerUrl);
+//            String host = url.getHost();
+//            int port = (url.getPort() != -1) ? url.getPort() : url.getDefaultPort();
+//
+//            // If HTTP(S), try to get the response code
+//            if (url.getProtocol().startsWith("http")) {
+//                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//                conn.setConnectTimeout(3000);
+//                conn.setReadTimeout(3000);
+//                conn.setRequestMethod("GET");
+//
+//                int code = conn.getResponseCode(); // triggers actual connection
+//                conn.disconnect();
+//
+//                // If we get any valid HTTP code, tracker is reachable
+//                return (code >= 100 && code < 600);
+//            }
+//
+//            // Otherwise, fall back to simple TCP socket check
+//            try (Socket socket = new Socket()) {
+//                socket.connect(new InetSocketAddress(host, port), 3000);
+//                socket.close();
+//                return true;
+//            }
+//
+//        } catch (IOException e) {
+//            return false;
+//        }
+//    }
 
     public String getPeerId() {
         return peerId;
