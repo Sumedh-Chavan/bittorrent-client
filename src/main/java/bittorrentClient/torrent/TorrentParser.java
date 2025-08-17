@@ -291,7 +291,24 @@ public class TorrentParser
                 }
             }
             return announceUrls;
-        } else
+        }
+        else if (null != dictionary.find(new BByteString("announce")))
+        {
+            List<String> announceUrls = new LinkedList<>();
+            IBencodable announceObj = (IBencodable) dictionary.find(new BByteString("announce"));
+
+            if (announceObj instanceof BByteString) {
+                announceUrls.add(announceObj.toString());
+            } else if (announceObj instanceof BList) {
+                Iterator<IBencodable> elements = ((BList) announceObj).getIterator();
+                while (elements.hasNext()) {
+                    announceUrls.add(elements.next().toString());
+                }
+            }
+
+            return announceUrls;
+        }
+        else
         {
             return null;
         }
