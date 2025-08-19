@@ -64,7 +64,7 @@ public class PeerHandler {
                 byte[] payload = new byte[payloadLength];
                 in.readFully(payload);
 
-                // execution depending on the different message ids
+
                 if(id == 5)     // bitfield message
                 {
                     processBitfieldMessage(connection);
@@ -100,8 +100,7 @@ public class PeerHandler {
                     if(indices.get(0) != -1)
                     {
                         //sending request message for next block
-                        // todo: think of how we can handle the last block being < 2^14
-                        sendRequestMessage(connection, indices.get(0), indices.get(1), 2^14);
+                        sendRequestMessage(connection, indices.get(0), indices.get(1), indices.get(2));
                     }
                     else
                     {
@@ -120,7 +119,8 @@ public class PeerHandler {
 
     public void processBitfieldMessage(Socket socket)
     {
-        // not doing anything for now but directly sending interested message
+        // not doing anything for now but directly sending interested message.
+        // once confirm what is being sending wrt to this bitfield message and then decide the process of bitfield.
 
 
         // sending interested message
