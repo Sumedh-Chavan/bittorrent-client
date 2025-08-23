@@ -15,7 +15,7 @@ public class PeerHandlerInfoTest {
     @Test
     public void testPeerInfo() throws Exception
     {
-        Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/2001259.torrent");
+        Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/sample.torrent");
         Tracker tracker = new Tracker(torrent);
         TrackerResponseParser trackerResponseParser = new TrackerResponseParser();
         TrackerResponse trackerResponse = trackerResponseParser.parseTrackerResponse(tracker.sendTrackerRequest());
@@ -25,7 +25,7 @@ public class PeerHandlerInfoTest {
             byte[] info_hashBytes = Utils.hexStringToBytes(torrent.getInfo_hash());
             byte[] peerId = Utils.CLIENT_ID.getBytes(StandardCharsets.ISO_8859_1); // 20 bytes
 
-            if(peer.sendPeerHandshake(info_hashBytes, peerId))
+            if(peer.sendPeerHandshake(info_hashBytes, peerId) != null)
                 System.out.println("success for ip: " + peer.getIp() + " and for port " + peer.getPort());
             else
                 System.out.println("error for ip: " + peer.getIp() + " and for port " + peer.getPort());
@@ -35,7 +35,7 @@ public class PeerHandlerInfoTest {
     @Test
     public void testPeerHandler() throws Exception
     {
-        Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/2001259.torrent");
+        Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/sample.torrent");
         Tracker tracker = new Tracker(torrent);
         TrackerResponseParser trackerResponseParser = new TrackerResponseParser();
         TrackerResponse trackerResponse = trackerResponseParser.parseTrackerResponse(tracker.sendTrackerRequest());

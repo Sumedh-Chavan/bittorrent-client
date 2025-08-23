@@ -9,7 +9,7 @@ public class TrackerResponseParserTest {
     @Test
     public void testParseTrackerResponse() throws Exception
     {
-        Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/2001259.torrent");
+        Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/sample.torrent");
         Tracker tracker = new Tracker(torrent);
         TrackerResponseParser trackerResponseParser = new TrackerResponseParser();
         TrackerResponse trackerResponse = trackerResponseParser.parseTrackerResponse(tracker.sendTrackerRequest());

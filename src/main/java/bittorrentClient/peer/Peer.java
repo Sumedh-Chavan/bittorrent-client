@@ -51,7 +51,7 @@ public class Peer {
 //        return true;
 //    }
 
-        //the below code for peer handshake also works but chatgpt gave a more polished version so maybe work with that for now
+    //the below code for peer handshake also works but chatgpt gave a more polished version so maybe work with that for now
 //    public boolean sendPeerHandshake(byte[] infoHashBytes, byte[] clientPeerIdBytes) {
 //        try {
 //            Socket socket = new Socket();
@@ -95,8 +95,10 @@ public class Peer {
 //    }
 
 
-        public boolean sendPeerHandshake(byte[] infoHashBytes, byte[] peerIdBytes) {
-        try (Socket socket = new Socket()) {
+    public Socket sendPeerHandshake(byte[] infoHashBytes, byte[] peerIdBytes) {
+        Socket socket = null;
+        try {
+            socket = new Socket();
             // 1. Connect
             socket.connect(new InetSocketAddress(ip, port), 3000); // 3s connect timeout
             socket.setSoTimeout(10000); // 10s read timeout for handshake
@@ -114,7 +116,8 @@ public class Peer {
             handshake.write("BitTorrent protocol".getBytes(StandardCharsets.ISO_8859_1));
 
             // reserved bytes (DHT + Fast extension bits set)
-            byte[] reserved = {0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x05};
+//            byte[] reserved = {0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x05};
+            byte[] reserved = new byte[8];
             handshake.write(reserved);
 
             // info_hash (20 raw bytes)
@@ -157,11 +160,17 @@ public class Peer {
                 throw new IOException("Mismatched info_hash from peer");
             }
 
-            return true;
+            return socket;
 
         } catch (Exception e) {
+            try {
+                socket.close();
+            }
+            catch (IOException ex) {
+
+            }
             System.err.println("Handshake failed: " + e.getMessage());
-            return false;
+            return null;
         }
     }
 
@@ -174,9 +183,10 @@ public class Peer {
         return sb.toString();
     }
 
-    //////////////////BOILER PLATE CODE BELOW////////////
+    /// ///////////////BOILER PLATE CODE BELOW////////////
 
-    public Peer() {}
+    public Peer() {
+    }
 
     public Peer(String peerId, String ip, int port) {
         this.peerId = peerId;

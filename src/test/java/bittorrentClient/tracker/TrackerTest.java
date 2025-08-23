@@ -11,7 +11,7 @@ public class TrackerTest {
     @Test
     public void sendTrackerRequestTest() throws IOException {
         try {
-            Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/2001259.torrent");
+            Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/sample.torrent");
             Tracker tracker = new Tracker(torrent);
             byte[] bytes = tracker.sendTrackerRequest();
         }
