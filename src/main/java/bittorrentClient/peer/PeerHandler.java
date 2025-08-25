@@ -2,6 +2,7 @@ package bittorrentClient.peer;
 
 import bittorrentClient.pieceHandling.pieceHandler;
 import bittorrentClient.pojo.Torrent;
+import bittorrentClient.utils.myLogs;
 
 import java.io.*;
 import java.net.Socket;
@@ -51,70 +52,81 @@ public class PeerHandler {
 
     // todo: maybe add socket datafield inside the peer class itself?
 
-    public void parsePeerMessage(Socket connection){
+    public void parsePeerMessage(Socket connection) throws IOException {
 
-        while(true)
-        {
-            try {
-                DataInputStream in = new DataInputStream(new BufferedInputStream(connection.getInputStream()));
+        myLogs.info("---> parsePeerMessage()");
 
-                int prefixLength = in.readInt();
-                byte id = in.readByte();
-                int payloadLength = prefixLength - 1;
-                byte[] payload = new byte[payloadLength];
-                in.readFully(payload);
-
-
-                if(id == 5)     // bitfield message
-                {
-                    processBitfieldMessage(connection);
-                }
-                if(id == 1)     // unchoke message
-                {
-
-                    // directly sending request for piece 0 and offset 0 for now
-                    ByteBuffer buffer = ByteBuffer.allocate(12);
-                    buffer.order(ByteOrder.BIG_ENDIAN); // ensure network order
-
-                    buffer.putInt(0);
-                    buffer.putInt(0);
-                    buffer.putInt(2^14);
-
-                    byte[] result = buffer.array();
-                    sendPeerMessage(connection, (byte) 6, result);
-                }
-                if(id == 7)     // piece message
-                {
-                    pieceHandler pieceHandler = new pieceHandler(torrent);
-
-                    DataInputStream payloadStream = new DataInputStream(new ByteArrayInputStream(payload));
-
-                    int index = payloadStream.readInt();
-                    int offset = payloadStream.readInt();
-
-                    byte[] payloadBytes = new byte[payloadLength - 8];
-                    payloadStream.readFully(payloadBytes);
-
-                    ArrayList<Integer> indices = pieceHandler.handleBlock(index, offset, payloadBytes);
-
-                    if(indices.get(0) != -1)
-                    {
-                        //sending request message for next block
-                        sendRequestMessage(connection, indices.get(0), indices.get(1), indices.get(2));
+        pieceHandler pieceHandler = new pieceHandler(torrent);
+        try (DataInputStream in = new DataInputStream(new BufferedInputStream(connection.getInputStream()))) {
+            while(true)
+            {
+                try {
+                    int prefixLength = in.readInt();
+                    if (prefixLength == 0) {
+                        continue; // Keep-alive message, no payload
                     }
-                    else
-                    {
-                        // todo: think of logic ahead of this.
-                        System.out.println("ok done bye");
-                        break;
-                    }
-                }
 
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                    byte id = in.readByte();
+                    int payloadLength = prefixLength - 1;
+                    byte[] payload = new byte[payloadLength];
+                    in.readFully(payload);
+
+
+                    if(id == 5)     // bitfield message
+                    {
+                        processBitfieldMessage(connection);
+                    }
+                    if(id == 1)     // unchoke message
+                    {
+
+                        // directly sending request for piece 0 and offset 0 for now
+                        ByteBuffer buffer = ByteBuffer.allocate(12);
+                        buffer.order(ByteOrder.BIG_ENDIAN); // ensure network order
+
+                        buffer.putInt(0);
+                        buffer.putInt(0);
+                        buffer.putInt(16384);
+
+                        myLogs.info("Sending request message for first piece and first block...");
+                        byte[] result = buffer.array();
+                        sendPeerMessage(connection, (byte) 6, result);
+                    }
+                    if(id == 7)     // piece message
+                    {
+                        DataInputStream payloadStream = new DataInputStream(new ByteArrayInputStream(payload));
+
+                        int index = payloadStream.readInt();
+                        int offset = payloadStream.readInt();
+
+                        byte[] payloadBytes = new byte[payloadLength - 8];
+                        payloadStream.readFully(payloadBytes);
+
+                        ArrayList<Integer> indices = pieceHandler.handleBlock(index, offset, payloadBytes);
+
+                        if(indices.get(0) != -1)
+                        {
+                            myLogs.info("Sending request message for index: " + indices.get(0) + " and offset: " + indices.get(1) + " for length: " + indices.get(2));
+                            sendRequestMessage(connection, indices.get(0), indices.get(1), indices.get(2));
+                        }
+                        else
+                        {
+
+                            pieceHandler.downloadPieces();
+
+                            System.out.println("ok done bye");
+                            break;
+                        }
+                    }
+
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
+        }catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
+        myLogs.info("<--- parsePeerMessage()");
     }
 
     public void processBitfieldMessage(Socket socket)
@@ -123,9 +135,9 @@ public class PeerHandler {
         // once confirm what is being sending wrt to this bitfield message and then decide the process of bitfield.
 
 
-        // sending interested message
+        myLogs.info("Sending interested message...");
         byte[] payload = new byte[0]; // length = 0
-        byte id = 1;
+        byte id = 2;
         sendPeerMessage(socket, id, payload);
 
     }
@@ -141,6 +153,7 @@ public class PeerHandler {
             out.write(payload);
             out.flush();
         } catch (IOException e) {
+            myLogs.error("Some error with IO for message id: " + id);
             throw new RuntimeException(e);
         }
     }
