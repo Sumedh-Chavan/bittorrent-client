@@ -1,4 +1,4 @@
-package bittorrentClient.torrent;
+package bittorrentClient.pojo;
 
 import java.util.List;
 

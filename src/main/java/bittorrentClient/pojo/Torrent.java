@@ -1,7 +1,5 @@
 package bittorrentClient.pojo;
 
-import bittorrentClient.torrent.TorrentFile;
-
 import java.util.*;
 
 public class Torrent

@@ -121,12 +121,17 @@ public class Tracker {
     public byte[] sendTrackerRequest() {
         try {
             AnnounceTester announceTester = new AnnounceTester();
-            String urlWithParams = announceTester.getAnActiveAnnounce(torrent.getAnnounceList()) +
+//            String urlWithParams = announceTester.getAnActiveAnnounce(torrent.getAnnounceList()) +
+//                    "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
+//                    "&peer_id=" + peerId +
+//                    "&port=" + 6010 +
+//                    "&uploaded=0&downloaded=0&left=" + torrent.getTotalSize() + "&event=started";
+
+            String urlWithParams = torrent.getAnnounce() +
                     "?info_hash=" + encodeInfoHash(torrent.getInfo_hash()) +
                     "&peer_id=" + peerId +
                     "&port=" + 6010 +
                     "&uploaded=0&downloaded=0&left=" + torrent.getTotalSize() + "&event=started";
-
 
             System.out.println("url with Params is " + urlWithParams);
 

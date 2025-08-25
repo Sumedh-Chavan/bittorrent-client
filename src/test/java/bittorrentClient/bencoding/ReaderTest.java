@@ -80,21 +80,12 @@ public class ReaderTest
 
     }
 
-    @Test
-    public void testParser()
-    {
-        try {
-            Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/2001259.torrent");
-            System.out.println(torrent);
-        }
-        catch (Exception e) {}
-    }
 
     @Test
     public void random()
     {
         try {
-            byte[] content = Files.readAllBytes(Paths.get("/home/ritesh/Downloads/2001259.torrent"));
+            byte[] content = Files.readAllBytes(Paths.get("/home/ritesh/Downloads/sample.torrent"));
             System.out.println("File size (bytes): " + content.length);
 
             // Optional: Print a hex dump (for debugging)
@@ -134,4 +125,14 @@ public class ReaderTest
         return sb.toString();
     }
 
+    //imp. test should read this
+    @Test
+    public void testParser()
+    {
+        try {
+            Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/sample.torrent");
+            System.out.println(torrent);
+        }
+        catch (Exception e) {}
+    }
 }
