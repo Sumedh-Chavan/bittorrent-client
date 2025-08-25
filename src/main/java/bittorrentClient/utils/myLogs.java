@@ -10,21 +10,27 @@ public class myLogs {
 
     static {
         try {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String logFileName = "logs/run_" + timeStamp + ".log";
+            // Ensure "logs" directory exists
+            java.nio.file.Path logDir = java.nio.file.Paths.get("logs");
+            if (!java.nio.file.Files.exists(logDir)) {
+                java.nio.file.Files.createDirectories(logDir);
+            }
 
-            FileHandler fileHandler = new FileHandler(logFileName);
+            String logFileName = "logs/run.log";
+
+            // false = overwrite on each run
+            FileHandler fileHandler = new FileHandler(logFileName, false);
             fileHandler.setFormatter(new CustomFormatter());
 
-            logger.setUseParentHandlers(false); // disable console
+            logger.setUseParentHandlers(false); // disable console output
             logger.addHandler(fileHandler);
-
             logger.setLevel(Level.ALL); // allow all levels
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 
     // Custom formatter: timestamp + level + message
     static class CustomFormatter extends Formatter {

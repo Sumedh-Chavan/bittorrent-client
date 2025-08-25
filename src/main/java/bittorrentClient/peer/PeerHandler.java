@@ -25,7 +25,8 @@ public class PeerHandler {
     // todo: just put here temp. find a better way out
     private Torrent torrent;
 
-    public PeerHandler(List<Peer> peers, byte[] infoHash, byte[] peerIdBytes) {
+    public PeerHandler(List<Peer> peers, byte[] infoHash, byte[] peerIdBytes, Torrent torrent) {
+        this.torrent = torrent;
         this.peers = peers;
         this.activePeers = Collections.synchronizedList(new ArrayList<>());
         this.infoHash = infoHash;
@@ -46,7 +47,7 @@ public class PeerHandler {
     }
 
     public void addActivePeer(Peer peer) {
-        if(peer.sendPeerHandshake(infoHash, peerIdBytes))
+        if(peer.sendPeerHandshake(infoHash, peerIdBytes) != null)
             activePeers.add(peer);
     }
 

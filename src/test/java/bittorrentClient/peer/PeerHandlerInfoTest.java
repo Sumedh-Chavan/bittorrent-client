@@ -42,7 +42,7 @@ public class PeerHandlerInfoTest {
         byte[] info_hashBytes = Utils.hexStringToBytes(torrent.getInfo_hash());
         byte[] peerId = Utils.CLIENT_ID.getBytes(StandardCharsets.ISO_8859_1); // 20 bytes
 
-        PeerHandler peerHandler = new PeerHandler(trackerResponse.getPeers(), info_hashBytes, peerId);
+        PeerHandler peerHandler = new PeerHandler(trackerResponse.getPeers(), info_hashBytes, peerId, torrent);
         peerHandler.setActivePeers();
     }
 }

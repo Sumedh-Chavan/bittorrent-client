@@ -6,6 +6,7 @@ import bittorrentClient.utils.myLogs;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -27,7 +28,6 @@ public class pieceHandler
     private int blockSize = 16384;
     private long fileSize;
     final ReentrantLock ioLock = new ReentrantLock();
-    Path outputFile = Paths.get("../output");
     final FileChannel channel;
     private Torrent torrent;
 
@@ -46,10 +46,21 @@ public class pieceHandler
             pieces[i] = new byte[currentPieceSize];
         }
 
-        pieceBlockOffset = 0;
+        pieceBlockOffset = 1;
         pieceIndex = 0;
 
-        channel = FileChannel.open(outputFile, StandardOpenOption.WRITE, StandardOpenOption.READ);
+        String fileName = torrent.getName() != null ? torrent.getName() : "output.data";
+        Path outputDir = Paths.get("../output");
+        Files.createDirectories(outputDir); // make sure directory exists
+        Path outputFile = outputDir.resolve(fileName);
+
+        channel = FileChannel.open(outputFile,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.READ);
+
+        myLogs.info("total pieces: " + totalPieces);
+        myLogs.info("total blocks: " + totalBlocks);
     }
 
     public ArrayList<Integer> handleBlock(int index, int offset, byte[] payload)
@@ -67,19 +78,29 @@ public class pieceHandler
         }
         else
         {
-            pieceBlockOffset = 0;
-            pieceIndex++;
-
-            if(pieceIndex <= totalPieces)
+            int remaining = (int) (pieceSize - (long) blockSize * (pieceBlockOffset - 1));
+            if(remaining > 0)
             {
                 res.add(pieceIndex);
-                res.add(0);
-                res.add((int) (fileSize - totalPieces * blockSize));
+                res.add(offset + remaining);
+                res.add(remaining);
             }
-            else {
-                res.add(-1);
-                res.add(-1);
-                res.add(-1);
+            else
+            {
+                pieceBlockOffset = 1;
+                pieceIndex++;
+
+                if(pieceIndex < totalPieces)
+                {
+                    res.add(pieceIndex);
+                    res.add(0);
+                    res.add(blockSize);
+                }
+                else {
+                    res.add(-1);
+                    res.add(-1);
+                    res.add(-1);
+                }
             }
         }
 

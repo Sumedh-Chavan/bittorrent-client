@@ -1,11 +1,13 @@
 package bittorrentClient;
 
+import bittorrentClient.peer.PeerHandler;
 import bittorrentClient.pojo.Torrent;
 import bittorrentClient.pojo.TrackerResponse;
 import bittorrentClient.torrent.TorrentParser;
 import bittorrentClient.tracker.Tracker;
 import bittorrentClient.tracker.TrackerResponseParser;
 import bittorrentClient.utils.Utils;
+import bittorrentClient.utils.myLogs;
 
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -22,8 +24,19 @@ public class Application {
 
     public void start() {
         try {
-            Torrent torrent = TorrentParser.parseTorrent("/home/ritesh/Downloads/sample.torrent");
-            System.out.println(torrent);
+            myLogs.info("Starting Application...");
+
+            Torrent torrent = TorrentParser.parseTorrent("../torrents/sample.torrent");
+//            System.out.println(torrent);
+
+            //torrent info
+            myLogs.info("*** Torrent info ***");
+            myLogs.info("annouce: " + torrent.getAnnounce());
+            myLogs.info("name: " + torrent.getName());
+            myLogs.info("pieceLength: " + torrent.getPieceLength());
+            myLogs.info("totalSize: " + torrent.getTotalSize());
+            myLogs.info("*** Torrent info ***");
+
             Tracker tracker = new Tracker(torrent);
             TrackerResponseParser trackerResponseParser = new TrackerResponseParser();
             TrackerResponse trackerResponse = trackerResponseParser.parseTrackerResponse(tracker.sendTrackerRequest());
@@ -34,6 +47,19 @@ public class Application {
                     .map(peer -> peer.sendPeerHandshake(info_hashBytes, peerId))
                     .collect(Collectors.toList());
 
+
+            PeerHandler handlePeer = new PeerHandler(trackerResponse.getPeers(),  info_hashBytes, peerId, torrent);
+
+            if(!socketList.isEmpty())
+            {
+                handlePeer.parsePeerMessage(socketList.get(1));
+            }
+            else{
+                System.out.println("socketList size: " + socketList.size());
+            }
+
+
+            myLogs.info("Ending application...");
 
         } catch (Exception e) {
             e.printStackTrace();
