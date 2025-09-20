@@ -75,22 +75,27 @@ public class PeerHandler {
 
                     if(id == 5)     // bitfield message
                     {
-                        processBitfieldMessage(connection);
+                        pieceHandler.setBitfieldFromPayload(payload);
+
+                        myLogs.info("Sending interested message...");
+                        byte[] tempPayload = new byte[0]; // length = 0
+                        byte tempId = 2;
+                        sendPeerMessage(connection, tempId, tempPayload);
                     }
                     if(id == 1)     // unchoke message
                     {
+                        // for first request message we default with index 0
+                        int nextIndex = pieceHandler.pickNextPieceIndex(0);
+                        if(nextIndex != -1)
+                        {
+                            // todo: maybe this can break if the first request is < 16348
+                            sendRequestMessage(connection, nextIndex, 0, 16384);
+                        }
+                        else {
+                            System.out.println("ok done bye");
+                            break;
+                        }
 
-                        // directly sending request for piece 0 and offset 0 for now
-                        ByteBuffer buffer = ByteBuffer.allocate(12);
-                        buffer.order(ByteOrder.BIG_ENDIAN); // ensure network order
-
-                        buffer.putInt(0);
-                        buffer.putInt(0);
-                        buffer.putInt(16384);
-
-                        myLogs.info("Sending request message for first piece and first block...");
-                        byte[] result = buffer.array();
-                        sendPeerMessage(connection, (byte) 6, result);
                     }
                     if(id == 7)     // piece message
                     {
@@ -111,11 +116,24 @@ public class PeerHandler {
                         }
                         else
                         {
+                            int checknextfrom;
+                            if(indices.get(2) != -1)    // hash verification failed. skip that index
+                            {
+                                checknextfrom = indices.get(1) + 1;
+                            }
+                            else checknextfrom = indices.get(1);
 
-                            pieceHandler.downloadPieces();
-
-                            System.out.println("ok done bye");
-                            break;
+                            int nextIndex = pieceHandler.pickNextPieceIndex(checknextfrom);
+                            if(nextIndex != -1)
+                            {
+                                sendRequestMessage(connection, nextIndex, 0, 16384);
+                            }
+                            else {
+                                pieceHandler.downloadPieces();
+                                myLogs.warn("*** EXITING ***");
+                                System.out.println("ok done bye");
+                                break;
+                            }
                         }
                     }
 
@@ -130,19 +148,6 @@ public class PeerHandler {
         myLogs.info("<--- parsePeerMessage()");
     }
 
-    public void processBitfieldMessage(Socket socket)
-    {
-        // not doing anything for now but directly sending interested message.
-        // once confirm what is being sending wrt to this bitfield message and then decide the process of bitfield.
-
-
-        myLogs.info("Sending interested message...");
-        byte[] payload = new byte[0]; // length = 0
-        byte id = 2;
-        sendPeerMessage(socket, id, payload);
-
-    }
-
     public void sendPeerMessage(Socket socket, byte id, byte[] payload)
     {
         try {
@@ -153,6 +158,8 @@ public class PeerHandler {
             out.writeByte(id);
             out.write(payload);
             out.flush();
+
+            myLogs.warn("Peer message sent with id: " + id);
         } catch (IOException e) {
             myLogs.error("Some error with IO for message id: " + id);
             throw new RuntimeException(e);
