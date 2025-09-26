@@ -21,9 +21,10 @@ public class PeerHandler {
     private List<Peer> activePeers;
     private byte[] infoHash;
     private byte[] peerIdBytes;
+    public static final int DEFAULT_PIPELINE = 6;
 
     // todo: just put here temp. find a better way out
-    private Torrent torrent;
+    private static Torrent torrent;
 
     public PeerHandler(List<Peer> peers, byte[] infoHash, byte[] peerIdBytes, Torrent torrent) {
         this.torrent = torrent;
@@ -53,7 +54,7 @@ public class PeerHandler {
 
     // todo: maybe add socket datafield inside the peer class itself?
 
-    public void parsePeerMessage(Socket connection) throws IOException {
+    public static Runnable parsePeerMessage(Socket connection) throws IOException{
 
         myLogs.info("---> parsePeerMessage()");
 
@@ -146,9 +147,12 @@ public class PeerHandler {
         }
 
         myLogs.info("<--- parsePeerMessage()");
+
+        //todo: really why null?
+        return null;
     }
 
-    public void sendPeerMessage(Socket socket, byte id, byte[] payload)
+    public static void sendPeerMessage(Socket socket, byte id, byte[] payload)
     {
         try {
             DataOutputStream out = new DataOutputStream((new BufferedOutputStream(socket.getOutputStream())));
@@ -166,7 +170,7 @@ public class PeerHandler {
         }
     }
 
-    public void sendRequestMessage(Socket socket, int index, int begin, int length)
+    public static void sendRequestMessage(Socket socket, int index, int begin, int length)
     {
         ByteBuffer buffer = ByteBuffer.allocate(12);
         buffer.order(ByteOrder.BIG_ENDIAN); // ensure network order

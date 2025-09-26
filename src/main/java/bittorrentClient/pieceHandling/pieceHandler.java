@@ -14,6 +14,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static bittorrentClient.bencoding.Utils.hex2ByteArray;
@@ -26,7 +29,7 @@ public class pieceHandler
     private int pieceIndex;
     private int totalPieces;
     private int totalBlocks;
-    private int blockSize = 16384;
+    public static int BLOCK_SIZE = 16384;
     private long fileSize;
     final ReentrantLock ioLock = new ReentrantLock();
     final FileChannel channel;
@@ -40,7 +43,7 @@ public class pieceHandler
         pieceSize = torrent.getPieceLength();
 
         totalPieces = (int) (torrent.getTotalSize() / torrent.getPieceLength());
-        totalBlocks = (int) (torrent.getPieceLength() / blockSize);
+        totalBlocks = (int) (torrent.getPieceLength() / BLOCK_SIZE);
         fileSize = torrent.getTotalSize();
 
         this.pieces = new byte[totalPieces][];
@@ -82,12 +85,12 @@ public class pieceHandler
         {
             res.add(pieceIndex);
             res.add(offset + 16384);
-            res.add(blockSize);
+            res.add(BLOCK_SIZE);
         }
         else
         {
             // last block calculation
-            int remaining = (int) (pieceSize - (long) blockSize * (pieceBlockOffset - 1));
+            int remaining = (int) (pieceSize - (long) BLOCK_SIZE * (pieceBlockOffset - 1));
             if(remaining > 0)
             {
                 res.add(pieceIndex);
@@ -103,7 +106,7 @@ public class pieceHandler
                 {
                     res.add(pieceIndex);
                     res.add(0);
-                    res.add(blockSize);
+                    res.add(BLOCK_SIZE);
                 }
                 else {
                     res.add(-1);
@@ -139,7 +142,7 @@ public class pieceHandler
         int nextOffset = offset + payload.length;
 
         if (nextOffset < pieceLen) {
-            int nextBlockSize = (int) Math.min(blockSize, (long) pieceLen - nextOffset);
+            int nextBlockSize = (int) Math.min(BLOCK_SIZE, (long) pieceLen - nextOffset);
             res.add(index);
             res.add(nextOffset);
             res.add(nextBlockSize);
@@ -196,20 +199,13 @@ public class pieceHandler
         return candidate.isEmpty() ? -1 : candidate.nextSetBit(index);
     }
 
-    public synchronized void markPieceAsComplete(int pieceIndex) {
-        if (pieceIndex < 0 || pieceIndex >= totalPieces) throw new IllegalArgumentException();
-        bitfield.set(pieceIndex);
-        // persist resume info to disk as needed
-//        saveToDisk(pieceIndex);
-    }
-
 
 
     private boolean verifyPieceHash(int index) {
         try {
             MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
             byte[] hash = sha1.digest(pieces[index]);
-            String expectedHashHex = torrent.getPieces().get(index);
+            String expectedHashHex = torrent.getPiecesHashes().get(index);
             byte[] expectedHash = hex2ByteArray(expectedHashHex);
             return MessageDigest.isEqual(hash, expectedHash);
         } catch (NoSuchAlgorithmException e) {

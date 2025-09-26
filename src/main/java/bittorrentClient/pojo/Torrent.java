@@ -2,13 +2,15 @@ package bittorrentClient.pojo;
 
 import java.util.*;
 
+import static bittorrentClient.bencoding.Utils.hex2ByteArray;
+
 public class Torrent
 {
     private String announce;
     private String name;
-    private Long pieceLength;
+    private int pieceLength;
     private byte[] piecesBlob;
-    private List<String> pieces;
+    private List<String> pieces; // piece hashes
     private boolean singleFileTorrent;
     private Long totalSize;
     private List<TorrentFile> fileList;
@@ -57,14 +59,14 @@ public class Torrent
         this.name = name;
     }
 
-    public Long getPieceLength()
+    public int getPieceLength()
     {
         return pieceLength;
     }
 
     public void setPieceLength(Long pieceLength)
     {
-        this.pieceLength = pieceLength;
+        this.pieceLength = Math.toIntExact(pieceLength);
     }
 
     public byte[] getPiecesBlob()
@@ -77,9 +79,23 @@ public class Torrent
         this.piecesBlob = piecesBlob;
     }
 
-    public List<String> getPieces()
+    public List<String> getPiecesHashes()
     {
         return pieces;
+    }
+
+    public byte[][] getPiecesHashesinBytes()
+    {
+        List<String> hashes = getPiecesHashes();
+        byte[][] result = new byte[hashes.size()][];
+
+        for(int i = 0; i < hashes.size(); i++)
+        {
+            byte[] byteHash = hex2ByteArray(hashes.get(i));
+            result[i] = byteHash;
+        }
+
+        return result;
     }
 
     public void setPieces(List<String> pieces)
@@ -155,6 +171,16 @@ public class Torrent
     public void setInfo_hash(String info_hash)
     {
         this.info_hash = info_hash;
+    }
+
+    public int getTotalPieces()
+    {
+        return (int) (totalSize / pieceLength);
+    }
+
+    public int getLastPieceLength()
+    {
+        return Math.toIntExact((totalSize - (getTotalPieces() - 1) * pieceLength));
     }
 
     @Override
