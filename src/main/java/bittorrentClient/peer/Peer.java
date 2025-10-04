@@ -1,10 +1,18 @@
 package bittorrentClient.peer;
 
+import bittorrentClient.pieceHandling.BlockKey;
+import bittorrentClient.utils.myLogs;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Peer {
 
@@ -15,8 +23,9 @@ public class Peer {
     private int port;
     public Socket socket = null;
     public volatile boolean[] bitfield;
-    public volatile boolean choked = false;
+    public volatile boolean choked = true;
     public int pipelineLimit = DEFAULT_PIPELINE;
+    public final Set<BlockKey> inflight = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public Socket sendPeerHandshake(byte[] infoHashBytes, byte[] peerIdBytes) {
         Socket socket = null;
@@ -149,5 +158,48 @@ public class Peer {
                 ", ip='" + ip + '\'' +
                 ", port=" + port +
                 '}';
+    }
+
+    public void sendPeerMessage(byte id, byte[] payload)
+    {
+        try {
+            DataOutputStream out = new DataOutputStream((new BufferedOutputStream(socket.getOutputStream())));
+
+            int length = 1 + payload.length;
+            out.writeInt(length);
+            out.writeByte(id);
+            out.write(payload);
+            out.flush();
+
+            myLogs.info("Peer message sent with id: " + id + " to peer " + peerId);
+            System.out.println("Peer message sent with id: " + id + " to peer " + peerId);
+        } catch (IOException e) {
+            myLogs.error("Some error with IO for message id: " + id + " from peer " + peerId);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendRequestMessage(int index, int begin, int length)
+    {
+        ByteBuffer buffer = ByteBuffer.allocate(12);
+        buffer.order(ByteOrder.BIG_ENDIAN); // ensure network order
+
+        buffer.putInt(index);
+        buffer.putInt(begin);
+        buffer.putInt(length);
+
+        byte[] result = buffer.array();
+        sendPeerMessage((byte) 6, result);
+    }
+
+    public void sendHaveMessage(int index)
+    {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.order(ByteOrder.BIG_ENDIAN); // ensure network order
+
+        buffer.putInt(index);
+
+        byte[] result = buffer.array();
+        sendPeerMessage((byte) 4, result);
     }
 }

@@ -12,10 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -27,7 +24,7 @@ public class pieceHandler
     private long pieceSize;
     private int pieceBlockOffset;
     private int pieceIndex;
-    private int totalPieces;
+    private static int totalPieces;
     private int totalBlocks;
     public static int BLOCK_SIZE = 16384;
     private long fileSize;
@@ -160,37 +157,6 @@ public class pieceHandler
         }
 
         return res;
-    }
-
-    public synchronized void setBitfieldFromPayload(byte[] payload) {
-        BitSet parsed = parseBitfieldToBitSet(payload, totalPieces);
-        peerbitfield.clear();
-        peerbitfield.or(parsed);
-
-        myLogs.info("The received bitfield is --- ");
-        myLogs.info("Size: " + peerbitfield.length());
-        myLogs.info("Content: " + peerbitfield);
-    }
-
-    public static BitSet parseBitfieldToBitSet(byte[] payload, int numPieces) {
-        BitSet bitset = new BitSet(numPieces);
-        int expectedLen = (numPieces + 7) / 8;
-        // It's okay if payload length != expectedLen; we'll use min length
-        int useLen = Math.min(payload.length, expectedLen);
-
-        for (int byteIndex = 0; byteIndex < useLen; byteIndex++) {
-            int b = payload[byteIndex] & 0xFF; // unsigned
-            // within byte, MSB is piece (byteIndex*8)
-            for (int bitInByte = 0; bitInByte < 8; bitInByte++) {
-                int pieceIndex = byteIndex * 8 + bitInByte;
-                if (pieceIndex >= numPieces) break; // ignore padding bits
-                int mask = 1 << (7 - bitInByte);
-                if ((b & mask) != 0) {
-                    bitset.set(pieceIndex);
-                }
-            }
-        }
-        return bitset;
     }
 
     public int pickNextPieceIndex(int index) {

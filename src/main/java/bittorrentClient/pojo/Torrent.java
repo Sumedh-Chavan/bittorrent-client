@@ -175,7 +175,7 @@ public class Torrent
 
     public int getTotalPieces()
     {
-        return (int) (totalSize / pieceLength);
+        return (int) ((totalSize + pieceLength - 1 ) / pieceLength);
     }
 
     public int getLastPieceLength()

@@ -11,7 +11,11 @@ import bittorrentClient.tracker.TrackerResponseParser;
 import bittorrentClient.utils.Utils;
 import bittorrentClient.utils.myLogs;
 
+import java.io.EOFException;
+import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,24 +55,38 @@ public class Application {
             for(Peer peer : peers) {
                 Socket socket = peer.sendPeerHandshake(info_hashBytes, peerId);
                 if(socket == null) continue;
+                socket.setSoTimeout(30000);
                 peer.setPeerSocket(socket);
                 manager.addPeer(peer);
-                manager.ioPool.execute(Objects.requireNonNull(PeerHandler.parsePeerMessage(socket)));
+                manager.ioPool.execute(() -> {
+                    try {
+                        manager.parsePeerMessage(peer.getPeerId());  // blocking I/O loop
+                    } catch (SocketTimeoutException ste) {
+                        myLogs.warn("Socket timeout for peer " + peer.getPeerId());
+                    } catch (SocketException | EOFException se) {
+                        if (!manager.isStopping()) {
+                            myLogs.warn("Peer " + peer.getPeerId() + " disconnected: " + se.getMessage());
+                        }
+                        // else ignore quietly — socket closed during shutdown
+                    } catch (IOException ioe) {
+                        if (!manager.isStopping()) {
+                            System.out.println("Peer " + peer.getPeerId() + " disconnected: " + ioe.getMessage());
+                            myLogs.error(String.format("I/O error from peer " + peer.getPeerId(), ioe));
+                        }
+                    } catch (Exception e) {
+                        if (!manager.isStopping()) {
+                            System.out.println("Peer " + peer.getPeerId() + " disconnected: " + e.getMessage());
+                            myLogs.error(String.format("Unexpected error from peer " + peer.getPeerId(), e));
+                        }
+                    } finally {
+                        manager.removePeer(peer.getPeerId());
+                        try { peer.socket.close(); } catch (IOException ignored) {}
+                    }
+                });
+
             }
 
-
-            PeerHandler handlePeer = new PeerHandler(trackerResponse.getPeers(),  info_hashBytes, peerId, torrent);
-
-//            if(!socketList.isEmpty())
-//            {
-//                handlePeer.parsePeerMessage(socketList.get(1));
-//            }
-//            else{
-//                System.out.println("socketList size: " + socketList.size());
-//            }
-
-
-            myLogs.info("Ending application...");
+            manager.start();
 
         } catch (Exception e) {
             e.printStackTrace();
